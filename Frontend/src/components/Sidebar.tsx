@@ -3,8 +3,10 @@ import { ViewType } from '../types';
 
 interface SidebarProps {
   currentView: ViewType;
-  onViewChange: (v: ViewType) => void;
+  onViewChange: (v: ViewType | 'LOGIN') => void;
   backendOnline: boolean;
+  username: string;
+  onLogout: () => void;
 }
 
 const NAV_ITEMS: { view: ViewType; label: string; icon: string; desc: string }[] = [
@@ -14,7 +16,9 @@ const NAV_ITEMS: { view: ViewType; label: string; icon: string; desc: string }[]
   { view: 'RESULTS',       label: 'Results',       icon: '◉', desc: 'Analysis & history' },
 ];
 
-export default function Sidebar({ currentView, onViewChange, backendOnline }: SidebarProps) {
+import { LogOut } from 'lucide-react';
+
+export default function Sidebar({ currentView, onViewChange, backendOnline, username, onLogout }: SidebarProps) {
   return (
     <aside className="fixed top-0 left-0 h-full w-64 flex flex-col z-30"
       style={{ background: 'var(--bg-sidebar)', borderRight: 'var(--border-thin)' }}>
@@ -62,16 +66,30 @@ export default function Sidebar({ currentView, onViewChange, backendOnline }: Si
         })}
       </nav>
 
-      {/* Backend status */}
-      <div className="px-6 py-5 border-t" style={{ borderColor: 'var(--border-color)' }}>
-        <div className="flex items-center gap-2">
+      {/* Backend status and User Profile */}
+      <div className="px-6 py-5 border-t flex flex-col gap-3" style={{ borderColor: 'var(--border-color)' }}>
+        
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded bg-cyan-500/20 text-cyan-500 flex items-center justify-center font-bold text-xs uppercase border border-cyan-500/30">
+              {username[0]}
+            </div>
+            <span className="text-xs font-semibold text-[var(--text-main)] truncate max-w-[100px]" title={username}>
+              {username}
+            </span>
+          </div>
+          <button onClick={onLogout} className="text-[var(--text-muted)] hover:text-red-400 transition-colors p-1" title="Sign Out">
+            <LogOut size={14} />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2 mt-2">
           <div className={cn('w-2 h-2 rounded-full', backendOnline ? 'bg-emerald-400' : 'bg-red-400')}
             style={{ boxShadow: backendOnline ? '0 0 6px #34d399' : '0 0 6px #f87171' }} />
           <span className="text-[11px] font-mono" style={{ color: 'var(--text-muted)' }}>
             {backendOnline ? 'BACKEND ONLINE' : 'BACKEND OFFLINE'}
           </span>
         </div>
-        <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)', opacity: 0.5 }}>localhost:8000</p>
       </div>
     </aside>
   );

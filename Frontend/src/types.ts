@@ -7,6 +7,8 @@ export interface ExperimentConfig {
   num_samples: number;
   seed: number;
   model_type: 'lr' | 'mlp';
+  username?: string;
+  session_name?: string;
 }
 
 export interface ExperimentResult {

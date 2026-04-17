@@ -87,7 +87,8 @@ export default function Simulation({
       addLog(`Generating ${config.num_samples} CRPs`);
       setPhase('TRAINING');
 
-      const res = await runExperiment(config);
+      const uname = localStorage.getItem('puf_username') || undefined;
+      const res = await runExperiment({ ...config, username: uname });
       console.log("API RESPONSE:", res);
       const safeRes = {
         accuracy: res?.accuracy ?? 0,

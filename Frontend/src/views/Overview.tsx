@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 
 interface OverviewProps {
-  onViewChange: (v: ViewType) => void;
+  onStartNewSession: () => void;
   history?: SimulationRun[];
 }
 
@@ -45,7 +45,7 @@ const PARAMETER_DATA = [
   { subject: 'Non-Linearity', LR: 20, MLP: 95 },
 ];
 
-export default function Overview({ onViewChange, history = [] }: OverviewProps) {
+export default function Overview({ onStartNewSession, history = [] }: OverviewProps) {
   // Aggregate user local history to find empirical best results by XOR level
   const userStats = [1, 2, 3, 4, 5, 6, 7, 8].map(k => {
     const runsK = history.filter(r => r.config.xor_level === k && r.status === 'COMPLETE' && r.result);
@@ -82,10 +82,10 @@ export default function Overview({ onViewChange, history = [] }: OverviewProps) 
           Simulate physical hardware security primitives, generate Challenge-Response Pair datasets, and evaluate how machine-learning attacks break them — all in your browser.
         </p>
         <button
-          onClick={() => onViewChange('CONFIGURATION')}
+          onClick={() => onStartNewSession()}
           className="px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
           style={{ background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-primary-dark))', color: 'var(--on-accent-primary)', boxShadow: '0 0 20px var(--accent-primary-alpha-30)' }}>
-          Start Experiment →
+          Start New Session →
         </button>
       </div>
 
@@ -191,7 +191,7 @@ export default function Overview({ onViewChange, history = [] }: OverviewProps) 
             <div className="p-8 flex-1 flex flex-col items-center justify-center text-center opacity-60 min-h-[320px]">
               <div className="text-3xl mb-3 text-[var(--accent-primary)]">⊘</div>
               <p className="text-sm font-headline font-semibold mb-1" style={{ color: 'var(--text-headline)' }}>No Data Yet</p>
-              <p className="text-xs max-w-[200px]" style={{ color: 'var(--text-muted)' }}>Run some models using the Start Experiment button to see your local meter metrics here.</p>
+              <p className="text-xs max-w-[200px]" style={{ color: 'var(--text-muted)' }}>Run some models using the Start New Session button to see your local meter metrics here.</p>
             </div>
           )}
         </div>

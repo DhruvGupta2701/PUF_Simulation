@@ -4,7 +4,7 @@ import html2canvas from 'html2canvas';
 import { SimulationRun } from '../types';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  LineChart, Line
+  LineChart, Line, LabelList
 } from 'recharts';
 import { formatAccuracy } from '../lib/utils';
 import { X, Download, FileText } from 'lucide-react';
@@ -122,7 +122,22 @@ export default function ReportModal({ history, onClose }: ReportModalProps) {
                     <YAxis tick={{ fontSize: 10, fill: '#64748b' }} domain={[40, 100]} label={{ value: 'Accuracy (%)', angle: -90, position: 'insideLeft', fill: '#64748b', fontSize: 12 }} />
                     <Tooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
                     <Legend wrapperStyle={{ fontSize: '12px' }} />
-                    <Line type="monotone" dataKey="accuracy" name="Predictability (%)" stroke="#0ea5e9" strokeWidth={3} dot={{ r: 4, fill: '#0ea5e9' }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="accuracy" name="Predictability (%)" stroke="#0ea5e9" strokeWidth={3} dot={{ r: 4, fill: '#0ea5e9' }} activeDot={{ r: 6 }}>
+                      <LabelList 
+                        dataKey="accuracy" 
+                        position="top" 
+                        formatter={(val: number) => `${val}%`} 
+                        style={{ fill: '#0f172a', fontSize: '10px', fontWeight: 'bold' }} 
+                        offset={10} 
+                      />
+                      <LabelList 
+                        dataKey="kXOR" 
+                        position="bottom" 
+                        formatter={(val: number) => `k=${val}`} 
+                        style={{ fill: '#64748b', fontSize: '9px' }} 
+                        offset={10} 
+                      />
+                    </Line>
                   </LineChart>
                 </ResponsiveContainer>
               </div>

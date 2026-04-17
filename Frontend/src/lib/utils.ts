@@ -10,8 +10,8 @@ export function formatAccuracy(acc: number): string {
 }
 
 export function getSecurityLabel(accuracy: number, xorLevel: number): { label: string; color: string } {
-  if (accuracy >= 0.95) return { label: 'COMPROMISED', color: 'text-red-400' };
-  if (accuracy >= 0.80) return { label: 'VULNERABLE', color: 'text-orange-400' };
-  if (accuracy >= 0.65) return { label: 'MODERATE', color: 'text-yellow-400' };
-  return { label: 'RESISTANT', color: 'text-emerald-400' };
+  if (accuracy >= 0.95) return { label: 'COMPROMISED', color: '#f87171' }; // red-400
+  if (accuracy >= 0.80) return { label: 'VULNERABLE', color: '#fb923c' }; // orange-400
+  if (accuracy >= 0.65) return { label: 'MODERATE', color: '#facc15' }; // yellow-400
+  return { label: 'RESISTANT', color: '#34d399' }; // emerald-400
 }

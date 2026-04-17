@@ -8,36 +8,70 @@ import Configuration from './views/Configuration';
 import Overview from './views/Overview';
 import Results from './views/Results';
 import Simulation from './views/Simulation';
+import Login from './views/Login';
+import { getUserHistory } from './lib/api';
 
 export default function App() {
   const { theme, setTheme } = useTheme();
-  const [currentView, setCurrentView] = useState<ViewType>('OVERVIEW');
+  const [username, setUsername] = useState<string | null>(localStorage.getItem('puf_username') || null);
+  const [currentView, setCurrentView] = useState<ViewType | 'LOGIN'>(username ? 'OVERVIEW' : 'LOGIN');
 
   const [config, setConfig] = useState({
     num_samples: 1000,
     n_stages: 64,
     xor_level: 2,
     noise: 0.1,
-    model_type: "lr",
+    model_type: "lr" as "lr"|"mlp",
     seed: 42
   });
+
+  const [currentSessionName, setCurrentSessionName] = useState<string>("Session 1");
 
   const [result, setResult] = useState<any>(null);
   const [backendOnline, setBackendOnline] = useState(false);
 
-  const [history, setHistory] = useState<SimulationRun[]>(() => {
-    try {
-      const saved = localStorage.getItem('puf_experiment_history');
-      if (saved) return JSON.parse(saved);
-    } catch {
-      console.error("Failed to parse history.");
-    }
-    return [];
-  });
+  const [history, setHistory] = useState<SimulationRun[]>([]);
 
   useEffect(() => {
-    localStorage.setItem('puf_experiment_history', JSON.stringify(history));
-  }, [history]);
+    if (username) {
+      localStorage.setItem('puf_username', username);
+      refreshHistory(username);
+    } else {
+      localStorage.removeItem('puf_username');
+      setHistory([]);
+    }
+  }, [username]);
+
+  const refreshHistory = (uName: string) => {
+    getUserHistory(uName).then(dbHistory => {
+      const formattedHistory: SimulationRun[] = dbHistory.map((row: any) => ({
+        id: row.id.toString(),
+        timestamp: row.timestamp,
+        config: {
+          n_stages: row.n_stages,
+          xor_level: row.xor_level,
+          noise: row.noise,
+          num_samples: row.num_samples,
+          seed: 42,
+          model_type: row.model_type as "lr" | "mlp",
+          username: row.username,
+          session_name: row.session_name || "Session 1"
+        },
+        result: {
+          accuracy: row.accuracy,
+          model_type: row.model_type,
+          n_stages: row.n_stages,
+          xor_level: row.xor_level,
+          noise: row.noise,
+          num_samples: row.num_samples,
+          seed: 42,
+          timestamp: row.timestamp
+        },
+        status: 'COMPLETE'
+      }));
+      setHistory(formattedHistory);
+    }).catch(err => console.error("Could not fetch history", err));
+  };
 
   useEffect(() => {
     const checkHealth = async () => {
@@ -58,9 +92,18 @@ export default function App() {
   }, []);
 
   const renderView = () => {
+    if (currentView === 'LOGIN') {
+      return (
+        <Login onLogin={(user) => {
+          setUsername(user);
+          setCurrentView('OVERVIEW');
+        }} />
+      );
+    }
+
     switch (currentView) {
       case 'OVERVIEW':
-        return <Overview onViewChange={setCurrentView} history={history} />;
+        return <Overview onStartNewSession={handleStartNewSession} history={history} />;
 
       case 'CONFIGURATION':
         return (
@@ -74,7 +117,8 @@ export default function App() {
       case 'SIMULATION':
         return (
           <Simulation
-            config={config}
+            config={{ ...config, session_name: currentSessionName }}
+            onViewChange={setCurrentView}
             onRunComplete={(run) => {
               console.log("Run completed:", run);
 
@@ -90,26 +134,52 @@ export default function App() {
         );
 
       case 'RESULTS':
-        return <Results result={result} history={history} />;
+        return <Results result={result} history={history} currentSessionName={currentSessionName} onSelectSession={(s) => {
+          setCurrentSessionName(s);
+          setCurrentView('CONFIGURATION');
+        }} onHistoryChange={() => {
+          if (username) refreshHistory(username);
+        }} />;
 
       default:
-        return <Overview onViewChange={setCurrentView} history={history} />;
+        return <Overview onStartNewSession={handleStartNewSession} history={history} />;
     }
+  };
+
+  const handleStartNewSession = () => {
+    // Generate new session name
+    const existingSessions = Array.from(new Set(history.map(r => r.config.session_name || "Session 1")));
+    let num = 1;
+    while(existingSessions.includes(`Session ${num}`)) {
+      num++;
+    }
+    setCurrentSessionName(`Session ${num}`);
+    setCurrentView('CONFIGURATION');
+  };
+
+  const handleLogout = () => {
+    setUsername(null);
+    setCurrentView('LOGIN');
   };
 
   return (
     <div className="min-h-screen kinetic-void-bg selection:bg-primary/30">
       
-      <Sidebar
-        currentView={currentView}
-        onViewChange={setCurrentView}
-        backendOnline={backendOnline}
-      />
+      {username && (
+        <Sidebar
+          currentView={currentView as ViewType}
+          onViewChange={setCurrentView}
+          backendOnline={backendOnline}
+          username={username}
+          onLogout={handleLogout}
+        />
+      )}
 
-      {/* ✅ FIXED HERE */}
-      <TopBar currentView={currentView} theme={theme} setTheme={setTheme} />
+      {username && (
+        <TopBar currentView={currentView as ViewType} theme={theme} setTheme={setTheme} />
+      )}
 
-      <main className="ml-64 pt-24 pb-12 px-12 min-h-screen">
+      <main className={username ? "ml-64 pt-24 pb-12 px-12 min-h-screen" : "pt-24 pb-12 px-12 min-h-screen"}>
         <div className="max-w-7xl mx-auto">
           {renderView()}
         </div>
@@ -121,7 +191,7 @@ export default function App() {
         <div className="absolute bottom-[10%] -left-[5%] w-[40%] h-[40%] bg-primary-container opacity-[0.02] blur-[100px] rounded-full"></div>
       </div>
 
-      <footer className="ml-64 py-8 opacity-20 text-center pointer-events-none">
+      <footer className={username ? "ml-64 py-8 opacity-20 text-center pointer-events-none" : "py-8 opacity-20 text-center pointer-events-none"}>
         <p className="text-[10px] font-mono uppercase tracking-[0.5em] text-slate-600">
           Secure Environment Encrypted via KINETIC_VOID_ENGINE // v1.0.42-STABLE
         </p>
