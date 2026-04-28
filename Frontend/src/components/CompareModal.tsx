@@ -47,14 +47,20 @@ export default function CompareModal({ sessionGroups, onClose }: CompareModalPro
       const runs = sessionGroups[sName];
       const lrRuns = runs.filter(r => r.config.model_type === 'lr');
       const mlpRuns = runs.filter(r => r.config.model_type === 'mlp');
+      const svmRuns = runs.filter(r => r.config.model_type === 'svm');
+      const rfRuns = runs.filter(r => r.config.model_type === 'rf');
       
       const maxLr = lrRuns.length > 0 ? Math.max(...lrRuns.map(r => r.result.accuracy)) : 0;
       const maxMlp = mlpRuns.length > 0 ? Math.max(...mlpRuns.map(r => r.result.accuracy)) : 0;
+      const maxSvm = svmRuns.length > 0 ? Math.max(...svmRuns.map(r => r.result.accuracy)) : 0;
+      const maxRf = rfRuns.length > 0 ? Math.max(...rfRuns.map(r => r.result.accuracy)) : 0;
 
       return {
         name: sName,
         LR: Number((maxLr * 100).toFixed(1)),
-        MLP: Number((maxMlp * 100).toFixed(1))
+        MLP: Number((maxMlp * 100).toFixed(1)),
+        SVM: Number((maxSvm * 100).toFixed(1)),
+        RF: Number((maxRf * 100).toFixed(1))
       };
     });
   }, [sessionGroups, sessionNames]);
@@ -187,6 +193,8 @@ export default function CompareModal({ sessionGroups, onClose }: CompareModalPro
                     <Legend wrapperStyle={{ paddingTop: '10px' }} />
                     <Bar name="Logistic Regression" dataKey="LR" fill="#0891b2" radius={[4, 4, 0, 0]} maxBarSize={50} />
                     <Bar name="Multilayer Perceptron (MLP)" dataKey="MLP" fill="#9333ea" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                    <Bar name="Support Vector Machine (SVM)" dataKey="SVM" fill="#ec4899" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                    <Bar name="Random Forest (RF)" dataKey="RF" fill="#f59e0b" radius={[4, 4, 0, 0]} maxBarSize={50} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

@@ -55,7 +55,7 @@ class ExperimentRequest(BaseModel):
     noise: float = Field(default=0.0, ge=0.0, le=1.0)
     num_samples: int = Field(default=10000, ge=100, le=200000)
     seed: int = Field(default=42)
-    model_type: str = Field(default="lr", pattern="^(lr|mlp)$")
+    model_type: str = Field(default="lr", pattern="^(lr|mlp|svm|rf)$")
     username: Optional[str] = None
     session_name: Optional[str] = "Session 1"
 

@@ -41,6 +41,8 @@ export default function ReportModal({ history, onClose }: ReportModalProps) {
   // Prepare data for comparisons
   const lrData = history.filter(h => h.config.model_type === 'lr').reverse();
   const mlpData = history.filter(h => h.config.model_type === 'mlp').reverse();
+  const svmData = history.filter(h => h.config.model_type === 'svm').reverse();
+  const rfData = history.filter(h => h.config.model_type === 'rf').reverse();
 
   // Unified comparison chart across time/run index
   const chartData = history.slice().reverse().map((r, i) => ({
@@ -106,7 +108,7 @@ export default function ReportModal({ history, onClose }: ReportModalProps) {
               <h2 className="text-xl font-semibold mb-3 border-l-4 pl-3" style={{ color: '#1e293b', borderColor: '#06b6d4' }}>Project Scope</h2>
               <p className="text-sm leading-relaxed" style={{ color: '#475569' }}>
                 This document outlines the simulation outcomes for machine learning modeling attacks targeting XOR Arbiter Physical Unclonable Functions (PUFs). 
-                The analysis encompasses historical attempts, model accuracies (Logistic Regression & Multi-Layer Perceptron), and structural parameter evaluations.
+                The analysis encompasses historical attempts, model accuracies (Logistic Regression, Multi-Layer Perceptron, Support Vector Machine, & Random Forest), and structural parameter evaluations.
               </p>
             </div>
 
@@ -145,25 +147,45 @@ export default function ReportModal({ history, onClose }: ReportModalProps) {
             </div>
 
             {/* Model Comparison */}
-            <div className="mb-10 grid grid-cols-2 gap-8">
+            <div className="mb-10 grid grid-cols-4 gap-4">
               <div>
-                <h3 className="text-md font-semibold mb-3 border-b pb-2" style={{ color: '#1e293b', borderColor: '#e2e8f0' }}>Logistic Regression (LR)</h3>
-                <p className="text-xs mb-2" style={{ color: '#475569' }}>Linear boundary attacks utilizing evolutionary algorithms or fast gradient mapping.</p>
+                <h3 className="text-md font-semibold mb-3 border-b pb-2" style={{ color: '#1e293b', borderColor: '#e2e8f0' }}>Logistic Regression</h3>
+                <p className="text-[10px] mb-2" style={{ color: '#475569' }}>Linear boundary attacks utilizing evolutionary algorithms.</p>
                 <div className="p-3 rounded border" style={{ background: '#f8fafc', borderColor: '#f1f5f9' }}>
                   <span className="block text-xl font-mono font-bold" style={{ color: '#0891b2' }}>
                     {lrData.length > 0 ? formatAccuracy(lrData[lrData.length - 1].result.accuracy) : 'N/A'}
                   </span>
-                  <span className="text-[10px] uppercase tracking-wide" style={{ color: '#64748b' }}>Latest Top Accuracy</span>
+                  <span className="text-[10px] uppercase tracking-wide" style={{ color: '#64748b' }}>Latest Top</span>
                 </div>
               </div>
               <div>
-                <h3 className="text-md font-semibold mb-3 border-b pb-2" style={{ color: '#1e293b', borderColor: '#e2e8f0' }}>Multi-Layer Perceptron (MLP)</h3>
-                <p className="text-xs mb-2" style={{ color: '#475569' }}>Deep learning approaches targeting higher-level XOR non-linearities.</p>
+                <h3 className="text-md font-semibold mb-3 border-b pb-2" style={{ color: '#1e293b', borderColor: '#e2e8f0' }}>MLP</h3>
+                <p className="text-[10px] mb-2" style={{ color: '#475569' }}>Deep learning approaches targeting XOR non-linearities.</p>
                 <div className="p-3 rounded border" style={{ background: '#f8fafc', borderColor: '#f1f5f9' }}>
                   <span className="block text-xl font-mono font-bold" style={{ color: '#9333ea' }}>
                     {mlpData.length > 0 ? formatAccuracy(mlpData[mlpData.length - 1].result.accuracy) : 'N/A'}
                   </span>
-                  <span className="text-[10px] uppercase tracking-wide" style={{ color: '#64748b' }}>Latest Top Accuracy</span>
+                  <span className="text-[10px] uppercase tracking-wide" style={{ color: '#64748b' }}>Latest Top</span>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-md font-semibold mb-3 border-b pb-2" style={{ color: '#1e293b', borderColor: '#e2e8f0' }}>SVM</h3>
+                <p className="text-[10px] mb-2" style={{ color: '#475569' }}>Kernel-based boundary definitions for non-linear structures.</p>
+                <div className="p-3 rounded border" style={{ background: '#f8fafc', borderColor: '#f1f5f9' }}>
+                  <span className="block text-xl font-mono font-bold" style={{ color: '#ec4899' }}>
+                    {svmData.length > 0 ? formatAccuracy(svmData[svmData.length - 1].result.accuracy) : 'N/A'}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-wide" style={{ color: '#64748b' }}>Latest Top</span>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-md font-semibold mb-3 border-b pb-2" style={{ color: '#1e293b', borderColor: '#e2e8f0' }}>Random Forest</h3>
+                <p className="text-[10px] mb-2" style={{ color: '#475569' }}>Ensemble decision boundaries for complex representations.</p>
+                <div className="p-3 rounded border" style={{ background: '#f8fafc', borderColor: '#f1f5f9' }}>
+                  <span className="block text-xl font-mono font-bold" style={{ color: '#f59e0b' }}>
+                    {rfData.length > 0 ? formatAccuracy(rfData[rfData.length - 1].result.accuracy) : 'N/A'}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-wide" style={{ color: '#64748b' }}>Latest Top</span>
                 </div>
               </div>
             </div>

@@ -15,13 +15,14 @@ export default function App() {
   const { theme, setTheme } = useTheme();
   const [username, setUsername] = useState<string | null>(localStorage.getItem('puf_username') || null);
   const [currentView, setCurrentView] = useState<ViewType | 'LOGIN'>(username ? 'OVERVIEW' : 'LOGIN');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [config, setConfig] = useState({
     num_samples: 1000,
     n_stages: 64,
     xor_level: 2,
     noise: 0.1,
-    model_type: "lr" as "lr"|"mlp",
+    model_type: "lr" as "lr"|"mlp"|"svm"|"rf",
     seed: 42
   });
 
@@ -53,7 +54,7 @@ export default function App() {
           noise: row.noise,
           num_samples: row.num_samples,
           seed: 42,
-          model_type: row.model_type as "lr" | "mlp",
+          model_type: row.model_type as "lr" | "mlp" | "svm" | "rf",
           username: row.username,
           session_name: row.session_name || "Session 1"
         },
@@ -119,12 +120,17 @@ export default function App() {
           <Simulation
             config={{ ...config, session_name: currentSessionName }}
             onViewChange={setCurrentView}
-            onRunComplete={(run) => {
-              console.log("Run completed:", run);
+            onRunComplete={(runOrRuns) => {
+              console.log("Run completed:", runOrRuns);
 
-              if (run?.result) {
-                setResult(run.result);
-                setHistory(prev => [run, ...prev]);
+              if (Array.isArray(runOrRuns)) {
+                const results = runOrRuns.map(r => r.result);
+                setResult(results);
+                setHistory(prev => [...runOrRuns, ...prev]);
+                setCurrentView('RESULTS');
+              } else if (runOrRuns?.result) {
+                setResult(runOrRuns.result);
+                setHistory(prev => [runOrRuns, ...prev]);
                 setCurrentView('RESULTS');
               } else {
                 console.error("No result received");
@@ -163,7 +169,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen kinetic-void-bg selection:bg-primary/30">
+    <div className="min-h-screen kinetic-void-bg selection:bg-primary/30 overflow-x-hidden">
       
       {username && (
         <Sidebar
@@ -172,14 +178,21 @@ export default function App() {
           backendOnline={backendOnline}
           username={username}
           onLogout={handleLogout}
+          isOpen={isMobileMenuOpen}
+          setIsOpen={setIsMobileMenuOpen}
         />
       )}
 
       {username && (
-        <TopBar currentView={currentView as ViewType} theme={theme} setTheme={setTheme} />
+        <TopBar 
+          currentView={currentView as ViewType} 
+          theme={theme} 
+          setTheme={setTheme}
+          onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+        />
       )}
 
-      <main className={username ? "ml-64 pt-24 pb-12 px-12 min-h-screen" : "pt-24 pb-12 px-12 min-h-screen"}>
+      <main className={username ? "md:ml-64 pt-24 pb-12 px-4 sm:px-6 md:px-12 min-h-screen transition-all" : "pt-24 pb-12 px-4 sm:px-6 md:px-12 min-h-screen transition-all"}>
         <div className="max-w-7xl mx-auto">
           {renderView()}
         </div>
@@ -191,7 +204,7 @@ export default function App() {
         <div className="absolute bottom-[10%] -left-[5%] w-[40%] h-[40%] bg-primary-container opacity-[0.02] blur-[100px] rounded-full"></div>
       </div>
 
-      <footer className={username ? "ml-64 py-8 opacity-20 text-center pointer-events-none" : "py-8 opacity-20 text-center pointer-events-none"}>
+      <footer className={username ? "md:ml-64 py-8 opacity-20 text-center pointer-events-none transition-all" : "py-8 opacity-20 text-center pointer-events-none transition-all"}>
         <p className="text-[10px] font-mono uppercase tracking-[0.5em] text-slate-600">
           Secure Environment Encrypted via KINETIC_VOID_ENGINE // v1.0.42-STABLE
         </p>

@@ -7,6 +7,8 @@ interface SidebarProps {
   backendOnline: boolean;
   username: string;
   onLogout: () => void;
+  isOpen?: boolean;
+  setIsOpen?: (val: boolean) => void;
 }
 
 const NAV_ITEMS: { view: ViewType; label: string; icon: string; desc: string }[] = [
@@ -18,10 +20,22 @@ const NAV_ITEMS: { view: ViewType; label: string; icon: string; desc: string }[]
 
 import { LogOut } from 'lucide-react';
 
-export default function Sidebar({ currentView, onViewChange, backendOnline, username, onLogout }: SidebarProps) {
+export default function Sidebar({ currentView, onViewChange, backendOnline, username, onLogout, isOpen, setIsOpen }: SidebarProps) {
   return (
-    <aside className="fixed top-0 left-0 h-full w-64 flex flex-col z-30"
-      style={{ background: 'var(--bg-sidebar)', borderRight: 'var(--border-thin)' }}>
+    <>
+      {/* Mobile backdrop */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-30 md:hidden backdrop-blur-sm transition-opacity"
+          onClick={() => setIsOpen && setIsOpen(false)}
+        />
+      )}
+      
+      <aside className={cn(
+        "fixed top-0 left-0 h-full w-64 flex flex-col z-40 transition-transform duration-300 md:translate-x-0 shadow-2xl md:shadow-none",
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      )}
+        style={{ background: 'var(--bg-sidebar)', borderRight: 'var(--border-thin)' }}>
 
       {/* Logo */}
       <div className="px-6 pt-8 pb-6">
@@ -42,7 +56,10 @@ export default function Sidebar({ currentView, onViewChange, backendOnline, user
           return (
             <button
               key={view}
-              onClick={() => onViewChange(view)}
+              onClick={() => {
+                onViewChange(view);
+                if (setIsOpen) setIsOpen(false);
+              }}
               className={cn(
                 'w-full flex items-center gap-3 px-3 py-3 rounded-lg mb-1 text-left transition-all duration-200 group',
                 active
@@ -92,5 +109,6 @@ export default function Sidebar({ currentView, onViewChange, backendOnline, user
         </div>
       </div>
     </aside>
+    </>
   );
 }

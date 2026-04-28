@@ -5,7 +5,7 @@ main.py – Entry-point for PUF ML attack experiments.
 from sklearn.model_selection import train_test_split
 
 from puf_models import XORPUF, generate_crps
-from attack_models import logistic_attack, mlp_attack
+from attack_models import logistic_attack, mlp_attack, svm_attack, rf_attack
 
 
 def run_experiment(config: dict) -> float:
@@ -25,6 +25,10 @@ def run_experiment(config: dict) -> float:
 
     if model_type == "mlp":
         accuracy, _ = mlp_attack(X_train, y_train, X_test, y_test, seed=seed)
+    elif model_type == "svm":
+        accuracy, _ = svm_attack(X_train, y_train, X_test, y_test, seed=seed)
+    elif model_type == "rf":
+        accuracy, _ = rf_attack(X_train, y_train, X_test, y_test, seed=seed)
     else:
         accuracy, _ = logistic_attack(X_train, y_train, X_test, y_test, seed=seed)
 

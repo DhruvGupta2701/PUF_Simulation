@@ -1,9 +1,11 @@
 import { ViewType } from '../types';
+import { Menu } from 'lucide-react';
 
 interface TopBarProps {
   currentView: ViewType;
   theme: 'dark' | 'light' | 'system';
   setTheme: (theme: 'dark' | 'light' | 'system') => void;
+  onMenuToggle?: () => void;
 }
 
 const VIEW_TITLES: Record<ViewType, { title: string; subtitle: string }> = {
@@ -13,16 +15,26 @@ const VIEW_TITLES: Record<ViewType, { title: string; subtitle: string }> = {
   RESULTS:       { title: 'Results & Analysis',     subtitle: 'Attack accuracy, history & security assessment' },
 };
 
-export default function TopBar({ currentView, theme, setTheme }: TopBarProps) {
+export default function TopBar({ currentView, theme, setTheme, onMenuToggle }: TopBarProps) {
   const { title, subtitle } = VIEW_TITLES[currentView];
   return (
-    <header className="fixed top-0 left-64 right-0 h-20 flex items-center px-12 z-20"
+    <header className="fixed top-0 left-0 md:left-64 right-0 h-20 flex items-center px-4 md:px-12 z-20 transition-all"
       style={{ background: 'var(--bg-header)', backdropFilter: 'blur(20px)', borderBottom: 'var(--border-thin)' }}>
+      
+      {onMenuToggle && (
+        <button 
+          onClick={onMenuToggle} 
+          className="md:hidden mr-4 p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[var(--text-headline)] transition-colors border border-white/10"
+        >
+          <Menu size={20} />
+        </button>
+      )}
+
       <div>
-        <h1 className="font-headline text-xl font-semibold tracking-tight" style={{ color: 'var(--text-headline)' }}>{title}</h1>
-        <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{subtitle}</p>
+        <h1 className="font-headline text-lg md:text-xl font-semibold tracking-tight" style={{ color: 'var(--text-headline)' }}>{title}</h1>
+        <p className="text-[10px] md:text-xs mt-0.5 hidden sm:block" style={{ color: 'var(--text-muted)' }}>{subtitle}</p>
       </div>
-      <div className="ml-auto flex items-center gap-4">
+      <div className="ml-auto flex items-center gap-2 md:gap-4">
         <select
           value={theme}
           onChange={(e) => setTheme(e.target.value as 'dark' | 'light' | 'system')}

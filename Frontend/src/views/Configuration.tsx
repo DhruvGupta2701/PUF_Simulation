@@ -108,9 +108,15 @@ export default function Configuration({ config, setConfig, onViewChange }: Confi
             <span className="text-sm font-medium" style={{ color: 'var(--text-headline)' }}>Attack Model</span>
             <p className="text-xs mt-0.5 mb-3" style={{ color: 'var(--text-muted)' }}>ML classifier for CRP prediction</p>
             <div className="grid grid-cols-2 gap-2">
-              {([['lr', 'Logistic Regression', 'Fast, linear model. Effective up to k=2.'], ['mlp', 'Neural Network (MLP)', 'Non-linear, handles k≥3 well.']] as const).map(([val, name, desc]) => (
+              {([
+                ['lr', 'Logistic Regression', 'Fast, linear model. Effective up to k=2.'], 
+                ['mlp', 'Neural Network (MLP)', 'Non-linear, handles k≥3 well.'],
+                ['svm', 'Support Vector Machine', 'Powerful non-linear classifier.'],
+                ['rf', 'Random Forest', 'Ensemble tree-based classifier.'],
+                ['all', 'Compare All Models', 'Runs all four models sequentially and creates a comparison chart.']
+              ] as const).map(([val, name, desc]) => (
                 <button key={val} onClick={() => set('model_type')(val)}
-                  className="p-3 rounded-lg text-left transition-all duration-200"
+                  className={cn("p-3 rounded-lg text-left transition-all duration-200", val === 'all' ? "col-span-2" : "")}
                   style={{
                     background: config.model_type === val ? 'var(--accent-primary-alpha-8)' : 'var(--bg-header-light)',
                     border: `1px solid ${config.model_type === val ? 'rgba(76,214,255,0.4)' : 'var(--border-color-strong)'}`,

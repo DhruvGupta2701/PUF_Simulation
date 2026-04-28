@@ -6,7 +6,7 @@ export interface ExperimentConfig {
   noise: number;
   num_samples: number;
   seed: number;
-  model_type: 'lr' | 'mlp';
+  model_type: 'lr' | 'mlp' | 'svm' | 'rf' | 'all';
   username?: string;
   session_name?: string;
 }

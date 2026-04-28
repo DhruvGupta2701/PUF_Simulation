@@ -163,3 +163,13 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+@keyframes slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+@keyframes data-flow {
+  0% { stroke-dashoffset: 24; }
+  100% { stroke-dashoffset: 0; }
+}

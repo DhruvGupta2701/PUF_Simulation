@@ -31,18 +31,18 @@ const CARDS = [
 ];
 
 const METRICS = [
-  { label: 'k=1 (Single Arbiter)', lr: '≥99%', mlp: '≥99%', risk: 'Critical' },
-  { label: 'k=2 (2-XOR)', lr: '~95%', mlp: '~97%', risk: 'High' },
-  { label: 'k=3 (3-XOR)', lr: '~52%', mlp: '~85%', risk: 'Moderate' },
-  { label: 'k=4 (4-XOR)', lr: '~50%', mlp: '~65%', risk: 'Low' },
+  { label: 'k=1 (Single Arbiter)', lr: '≥99%', mlp: '≥99%', svm: '≥99%', rf: '≥99%', risk: 'Critical' },
+  { label: 'k=2 (2-XOR)', lr: '~95%', mlp: '~97%', svm: '~98%', rf: '~92%', risk: 'High' },
+  { label: 'k=3 (3-XOR)', lr: '~52%', mlp: '~85%', svm: '~90%', rf: '~65%', risk: 'Moderate' },
+  { label: 'k=4 (4-XOR)', lr: '~50%', mlp: '~65%', svm: '~75%', rf: '~55%', risk: 'Low' },
 ];
 
 const PARAMETER_DATA = [
-  { subject: 'Speed (Fast)', LR: 95, MLP: 40 },
-  { subject: 'XOR Scalability', LR: 30, MLP: 90 },
-  { subject: 'Data Efficiency', LR: 80, MLP: 30 },
-  { subject: 'Interpretability', LR: 90, MLP: 20 },
-  { subject: 'Non-Linearity', LR: 20, MLP: 95 },
+  { subject: 'Speed (Fast)', LR: 95, MLP: 40, SVM: 60, RF: 80 },
+  { subject: 'XOR Scalability', LR: 30, MLP: 90, SVM: 85, RF: 60 },
+  { subject: 'Data Efficiency', LR: 80, MLP: 30, SVM: 60, RF: 70 },
+  { subject: 'Interpretability', LR: 90, MLP: 20, SVM: 40, RF: 75 },
+  { subject: 'Non-Linearity', LR: 20, MLP: 95, SVM: 90, RF: 80 },
 ];
 
 export default function Overview({ onStartNewSession, history = [] }: OverviewProps) {
@@ -53,17 +53,23 @@ export default function Overview({ onStartNewSession, history = [] }: OverviewPr
     
     const lrRuns = runsK.filter(r => r.config.model_type === 'lr');
     const mlpRuns = runsK.filter(r => r.config.model_type === 'mlp');
+    const svmRuns = runsK.filter(r => r.config.model_type === 'svm');
+    const rfRuns = runsK.filter(r => r.config.model_type === 'rf');
     
     const maxLr = lrRuns.length > 0 ? Math.max(...lrRuns.map(r => r.result.accuracy)) : null;
     const maxMlp = mlpRuns.length > 0 ? Math.max(...mlpRuns.map(r => r.result.accuracy)) : null;
+    const maxSvm = svmRuns.length > 0 ? Math.max(...svmRuns.map(r => r.result.accuracy)) : null;
+    const maxRf = rfRuns.length > 0 ? Math.max(...rfRuns.map(r => r.result.accuracy)) : null;
     
     return {
       name: `k=${k}`,
       LR: maxLr !== null ? Number((maxLr * 100).toFixed(1)) : 0,
       MLP: maxMlp !== null ? Number((maxMlp * 100).toFixed(1)) : 0,
+      SVM: maxSvm !== null ? Number((maxSvm * 100).toFixed(1)) : 0,
+      RF: maxRf !== null ? Number((maxRf * 100).toFixed(1)) : 0,
       runs: runsK.length
     };
-  }).filter(d => d !== null && (d.LR > 0 || d.MLP > 0));
+  }).filter(d => d !== null && (d.LR > 0 || d.MLP > 0 || d.SVM > 0 || d.RF > 0));
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -110,17 +116,19 @@ export default function Overview({ onStartNewSession, history = [] }: OverviewPr
         <table className="w-full text-sm">
           <thead>
             <tr style={{ background: 'var(--bg-header-light)' }}>
-              {['Architecture', 'Logistic Regression', 'MLP', 'Risk Level'].map(h => (
+              {['Architecture', 'Logistic Regression', 'MLP', 'SVM', 'Random Forest', 'Risk Level'].map(h => (
                 <th key={h} className="px-6 py-3 text-left text-xs font-mono tracking-wider" style={{ color: 'var(--text-muted)' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {METRICS.map(({ label, lr, mlp, risk }, i) => (
+            {METRICS.map(({ label, lr, mlp, svm, rf, risk }, i) => (
               <tr key={label} style={{ background: i % 2 === 0 ? 'var(--bg-panel-light)' : 'transparent', borderTop: 'var(--border-light)' }}>
                 <td className="px-6 py-3 font-mono text-xs" style={{ color: 'var(--text-headline)' }}>{label}</td>
                 <td className="px-6 py-3 text-xs" style={{ color: 'var(--accent-primary)' }}>{lr}</td>
                 <td className="px-6 py-3 text-xs" style={{ color: 'var(--accent-secondary)' }}>{mlp}</td>
+                <td className="px-6 py-3 text-xs" style={{ color: '#ec4899' }}>{svm}</td>
+                <td className="px-6 py-3 text-xs" style={{ color: '#f59e0b' }}>{rf}</td>
                 <td className="px-6 py-3">
                   <span className="text-xs font-mono px-2 py-0.5 rounded"
                     style={{
@@ -152,6 +160,8 @@ export default function Overview({ onStartNewSession, history = [] }: OverviewPr
                   <PolarAngleAxis dataKey="subject" tick={{ fill: 'var(--text-body)', fontSize: 11, fontWeight: 500 }} />
                   <Radar name="Logistic Regression" dataKey="LR" stroke="var(--accent-primary)" strokeWidth={2} fill="var(--accent-primary)" fillOpacity={0.25} />
                   <Radar name="MLP" dataKey="MLP" stroke="var(--accent-secondary)" strokeWidth={2} fill="var(--accent-secondary)" fillOpacity={0.25} />
+                  <Radar name="SVM" dataKey="SVM" stroke="#ec4899" strokeWidth={2} fill="#ec4899" fillOpacity={0.25} />
+                  <Radar name="Random Forest" dataKey="RF" stroke="#f59e0b" strokeWidth={2} fill="#f59e0b" fillOpacity={0.25} />
                   <Tooltip
                     contentStyle={{ backgroundColor: 'var(--bg-panel-solid)', border: 'var(--border-medium)', borderRadius: '8px', color: 'var(--text-headline)' }}
                     itemStyle={{ fontSize: '13px' }}
@@ -184,6 +194,8 @@ export default function Overview({ onStartNewSession, history = [] }: OverviewPr
                   <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                   <Bar name="Logistic Regression" dataKey="LR" fill="var(--accent-primary)" radius={[4, 4, 0, 0]} maxBarSize={40} />
                   <Bar name="MLP" dataKey="MLP" fill="var(--accent-secondary)" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  <Bar name="SVM" dataKey="SVM" fill="#ec4899" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  <Bar name="Random Forest" dataKey="RF" fill="#f59e0b" radius={[4, 4, 0, 0]} maxBarSize={40} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

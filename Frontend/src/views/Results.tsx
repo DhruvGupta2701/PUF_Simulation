@@ -3,10 +3,10 @@ import { formatAccuracy, getSecurityLabel } from '../lib/utils';
 import { SimulationRun } from '../types';
 import ReportModal from '../components/ReportModal';
 import CompareModal from '../components/CompareModal';
-import { FileText, Layers, Activity, Database, Cpu, Zap, Search, Filter, Edit2, Check, X, CheckSquare, BarChart2, Trash2 } from 'lucide-react';
+import { FileText, Layers, Activity, Database, Cpu, Zap, Search, Filter, Edit2, Check, X, CheckSquare, BarChart2, Trash2, Shield, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { renameSession, deleteSession } from '../lib/api';
 
-// A simple SVG semi-circle gauge meter
+// A refined and professional SVG semi-circle solid gauge meter
 const GaugeMeter = ({ accuracy }: { accuracy: number }) => {
   const [animatedAcc, setAnimatedAcc] = useState(0);
 
@@ -16,18 +16,24 @@ const GaugeMeter = ({ accuracy }: { accuracy: number }) => {
     return () => clearTimeout(timeout);
   }, [accuracy]);
 
-  const radius = 80;
-  const cx = 100;
-  const cy = 100;
+  const radius = 90;
+  const cx = 150;
+  const cy = 140;
   const circumference = Math.PI * radius;
   const normalizedAcc = Math.max(0, Math.min(1, animatedAcc));
   const strokeDashoffset = circumference - (normalizedAcc * circumference);
 
   const { color, label } = getSecurityLabel(accuracy, 0);
 
+  const getShieldIcon = () => {
+    if (label === 'COMPROMISED' || label === 'VULNERABLE') return <ShieldAlert size={14} />;
+    if (label === 'RESISTANT') return <ShieldCheck size={14} />;
+    return <Shield size={14} />;
+  };
+
   return (
-    <div className="relative flex flex-col items-center justify-center mt-8 mb-4">
-      <svg width="240" height="130" viewBox="0 0 200 120" className="overflow-visible drop-shadow-xl">
+    <div className="relative flex flex-col items-center justify-center mt-4 mb-4">
+      <svg width="300" height="160" viewBox="0 0 300 160" className="overflow-visible drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)]">
         <defs>
           <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#34d399" />
@@ -35,32 +41,225 @@ const GaugeMeter = ({ accuracy }: { accuracy: number }) => {
             <stop offset="100%" stopColor="#f87171" />
           </linearGradient>
         </defs>
+
+        {/* Background Track - Solid */}
         <path
           d={`M ${cx - radius} ${cy} A ${radius} ${radius} 0 0 1 ${cx + radius} ${cy}`}
           fill="none"
-          stroke="var(--border-medium)"
-          strokeWidth="14"
+          stroke="var(--bg-panel-light, #21262d)"
+          strokeWidth="30"
           strokeLinecap="round"
         />
+
+        {/* Colored Gradient Track */}
         <path
           d={`M ${cx - radius} ${cy} A ${radius} ${radius} 0 0 1 ${cx + radius} ${cy}`}
           fill="none"
           stroke="url(#gaugeGradient)"
-          strokeWidth="14"
+          strokeWidth="30"
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
           className="transition-all duration-1000 ease-out"
         />
+
+        {/* Tick Separators and Labels */}
+        {[0, 25, 50, 75, 100].map(tick => {
+          const t = tick / 100;
+          const angle = -Math.PI + t * Math.PI;
+          
+          // Tick separators
+          const innerR = radius - 16;
+          const outerR = radius + 16;
+          const x1 = cx + innerR * Math.cos(angle);
+          const y1 = cy + innerR * Math.sin(angle);
+          const x2 = cx + outerR * Math.cos(angle);
+          const y2 = cy + outerR * Math.sin(angle);
+          
+          // Outer text labels
+          const textR = radius + 32;
+          const textX = cx + textR * Math.cos(angle);
+          const textY = cy + textR * Math.sin(angle) + (t === 0.5 ? -2 : 0);
+          
+          return (
+            <g key={tick}>
+              {tick > 0 && tick < 100 && (
+                <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--bg-panel, #161b22)" strokeWidth="4" />
+              )}
+              <text x={textX} y={textY} fill="var(--text-muted)" fontSize="13" fontWeight="600" textAnchor="middle" dominantBaseline="middle">
+                {tick}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Needle */}
+        <g 
+          transform={`rotate(${-180 + (normalizedAcc * 180)} ${cx} ${cy})`} 
+          className="transition-transform duration-1000 ease-out drop-shadow-xl"
+        >
+          {/* Base tail */}
+          <path d={`M ${cx} ${cy - 4} L ${cx - 18} ${cy - 2} A 2 2 0 0 0 ${cx - 18} ${cy + 2} L ${cx} ${cy + 4} Z`} fill="#9ca3af" />
+          
+          {/* Needle body */}
+          <path d={`M ${cx} ${cy - 4} L ${cx + radius - 5} ${cy - 1.5} A 1.5 1.5 0 0 1 ${cx + radius - 5} ${cy + 1.5} L ${cx} ${cy + 4} Z`} fill="#9ca3af" />
+          
+          {/* Pivot Base */}
+          <circle cx={cx} cy={cy} r="8" fill="#9ca3af" />
+          <circle cx={cx} cy={cy} r="3" fill="#1f2937" />
+        </g>
       </svg>
-      <div className="absolute top-[45px] flex flex-col items-center">
-        <span className="text-4xl font-mono font-bold tracking-tighter" style={{ color }}>
+      
+      {/* Value and Badge moved below so they don't overlap the needle */}
+      <div className="flex flex-col items-center mt-2 z-10">
+        <span className="text-4xl font-mono font-extrabold tracking-tighter tabular-nums drop-shadow-lg" style={{ color, textShadow: `0 0 15px ${color}60` }}>
           {formatAccuracy(animatedAcc)}
         </span>
-        <span className="text-sm font-semibold tracking-wide uppercase mt-2 px-3 py-1 rounded-full" 
-              style={{ color, backgroundColor: `${color}20`, border: `1px solid ${color}40` }}>
+        
+        <div className="mt-2 flex items-center gap-1.5 px-4 py-1.5 rounded-full shadow-inner font-bold tracking-widest text-[11px] uppercase border backdrop-blur-sm transition-all duration-500" 
+              style={{ color, backgroundColor: `${color}15`, borderColor: `${color}40` }}>
+          {getShieldIcon()}
           {label}
-        </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MultiGaugeMeter = ({ results }: { results: any[] }) => {
+  const [animatedAccs, setAnimatedAccs] = useState<number[]>(results.map(() => 0));
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setAnimatedAccs(results.map(r => r.accuracy));
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, [results]);
+
+  const colors = ['#0ea5e9', '#10b981', '#eab308', '#ec4899']; // blue, green, yellow, pink
+  const center = 150;
+  const baseRadius = 110;
+  const strokeWidth = 18;
+  const gap = 24;
+
+  return (
+    <div className="flex flex-col items-center mt-4 mb-4">
+      <div className="relative">
+        <svg width="300" height="300" viewBox="0 0 300 300" className="overflow-visible drop-shadow-[0_10px_20px_rgba(0,0,0,0.4)]">
+          {results.map((r, i) => {
+            const radius = baseRadius - (i * gap);
+            const circumference = 2 * Math.PI * radius;
+            const pct = Math.max(0, Math.min(1, animatedAccs[i] || 0));
+            const offset = circumference - (pct * circumference);
+            const color = colors[i % colors.length];
+
+            return (
+              <g key={i}>
+                <circle
+                  cx={center} cy={center} r={radius}
+                  fill="none" stroke={color} strokeWidth={strokeWidth}
+                  className="opacity-15"
+                />
+                <circle
+                  cx={center} cy={center} r={radius}
+                  fill="none" stroke={color} strokeWidth={strokeWidth}
+                  strokeDasharray={circumference}
+                  strokeDashoffset={offset}
+                  strokeLinecap="round"
+                  transform={`rotate(-90 ${center} ${center})`}
+                  className="transition-all duration-1000 ease-out"
+                  style={{ filter: `drop-shadow(0 0 6px ${color}66)` }}
+                />
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+      
+      <div className="flex flex-wrap justify-center gap-4 mt-6 text-[11px] font-bold tracking-wider uppercase font-mono">
+        {results.map((r, i) => (
+          <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all hover:scale-105" style={{ backgroundColor: `${colors[i % colors.length]}15`, color: colors[i % colors.length], border: `1px solid ${colors[i % colors.length]}40` }}>
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors[i % colors.length], boxShadow: `0 0 8px ${colors[i % colors.length]}` }} />
+            {r.model_type}: {formatAccuracy(animatedAccs[i] || 0)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const SpeedometerGauge = ({
+  value, min, max, label, unit = '', ticks = []
+}: {
+  value: number; min: number; max: number; label: string; unit?: string; ticks?: number[]
+}) => {
+  const [animVal, setAnimVal] = useState(min);
+  
+  useEffect(() => {
+    const t = setTimeout(() => setAnimVal(value), 100);
+    return () => clearTimeout(t);
+  }, [value]);
+
+  const pct = Math.max(0, Math.min(1, (animVal - min) / (max - min)));
+  const angle = -90 + (pct * 180);
+
+  const cx = 100;
+  const cy = 110;
+  const r = 70;
+  
+  const gradId = `grad-${label.replace(/\s+/g, '')}`;
+
+  return (
+    <div className="flex flex-col items-center justify-start p-4 rounded-xl bg-[var(--bg-app)] border border-[var(--border-medium)] shadow-sm w-full h-[180px] relative hover:border-[var(--border-strong)] transition-all">
+      <div className="text-[11px] opacity-90 mb-0 uppercase tracking-widest font-bold text-[var(--text-headline)]">{label}</div>
+      <svg width="100%" height="100%" viewBox="0 0 200 130" className="overflow-visible mt-2">
+        <defs>
+          <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#34d399" />
+            <stop offset="60%" stopColor="#facc15" />
+            <stop offset="100%" stopColor="#f87171" />
+          </linearGradient>
+        </defs>
+        
+        {/* Track */}
+        <path 
+          d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} 
+          fill="none" 
+          stroke={`url(#${gradId})`} 
+          strokeWidth="12" 
+          strokeLinecap="butt" 
+        />
+        
+        {/* Ticks and Labels */}
+        {ticks.map(tick => {
+          const tPct = (tick - min) / (max - min);
+          const tAngle = -Math.PI + (tPct * Math.PI);
+          const tx1 = cx + (r - 6) * Math.cos(tAngle);
+          const ty1 = cy + (r - 6) * Math.sin(tAngle);
+          const tx2 = cx + (r + 6) * Math.cos(tAngle);
+          const ty2 = cy + (r + 6) * Math.sin(tAngle);
+          
+          const lx = cx + (r + 18) * Math.cos(tAngle);
+          const ly = cy + (r + 18) * Math.sin(tAngle) + (tAngle > -Math.PI/2 ? 3 : 0);
+          
+          return (
+            <g key={tick}>
+              <line x1={tx1} y1={ty1} x2={tx2} y2={ty2} stroke="var(--bg-app)" strokeWidth="2" />
+              <text x={lx} y={ly} fill="var(--text-muted)" fontSize="9" fontWeight="bold" textAnchor="middle" dominantBaseline="middle">
+                {tick}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Needle */}
+        <g transform={`rotate(${angle} ${cx} ${cy})`} className="transition-all duration-1000 ease-out">
+          <polygon points={`${cx - 3},${cy} ${cx + 3},${cy} ${cx},${cy - r + 8}`} fill="#94a3b8" />
+          <circle cx={cx} cy={cy} r="5" fill="#475569" />
+        </g>
+      </svg>
+      <div className="font-mono text-sm font-bold text-[var(--text-headline)] mt-auto pt-2 absolute bottom-4 left-1/2 transform -translate-x-1/2">
+        {animVal} <span className="text-[10px] text-[var(--text-muted)] font-sans ml-0.5">{unit}</span>
       </div>
     </div>
   );
@@ -79,7 +278,7 @@ export default function Results({ result, history = [], currentSessionName, onSe
   const [showCompareModal, setShowCompareModal] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterModel, setFilterModel] = useState<'ALL'|'lr'|'mlp'>('ALL');
+  const [filterModel, setFilterModel] = useState<'ALL'|'lr'|'mlp'|'svm'|'rf'>('ALL');
   const [filterDate, setFilterDate] = useState<'ALL' | 'TODAY'>('ALL');
   
   const [editingSession, setEditingSession] = useState<string | null>(null);
@@ -184,13 +383,17 @@ export default function Results({ result, history = [], currentSessionName, onSe
         >
           {/* Decorative background glow based on result color */}
           <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b opacity-5 pointer-events-none" 
-               style={{ backgroundImage: `linear-gradient(to bottom, ${color}, transparent)` }} />
+               style={{ backgroundImage: `linear-gradient(to bottom, ${Array.isArray(result) ? '#0891b2' : color}, transparent)` }} />
                
           <h2 className="text-xl font-bold mb-2 flex items-center justify-center gap-2 relative z-10">
-            Attack Results
+            {Array.isArray(result) ? 'Comparison Results' : 'Attack Results'}
           </h2>
 
-          <GaugeMeter accuracy={accuracy} />
+          {Array.isArray(result) ? (
+            <MultiGaugeMeter results={result} />
+          ) : (
+            <GaugeMeter accuracy={accuracy} />
+          )}
           
         </div>
       )}
@@ -209,34 +412,38 @@ export default function Results({ result, history = [], currentSessionName, onSe
           </h3>
 
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 text-sm relative z-10">
-            <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-[var(--bg-app)] border border-[var(--border-medium)] hover:border-blue-500/50 hover:bg-blue-500/5 transition-all shadow-sm hover:shadow-blue-500/10 hover:-translate-y-1">
-              <Layers className="mb-3 text-blue-400" size={26} />
-              <span className="text-[10px] opacity-60 mb-1 uppercase tracking-widest font-semibold">Stages</span>
-              <span className="font-mono text-xl font-bold text-[var(--text-headline)]">{result?.n_stages}</span>
-            </div>
+            <SpeedometerGauge 
+              label="Stages" 
+              value={Array.isArray(result) ? result[0]?.n_stages : result?.n_stages} 
+              min={0} max={128} 
+              ticks={[0, 32, 64, 96, 128]} 
+            />
             
-            <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-[var(--bg-app)] border border-[var(--border-medium)] hover:border-purple-500/50 hover:bg-purple-500/5 transition-all shadow-sm hover:shadow-purple-500/10 hover:-translate-y-1">
-              <Zap className="mb-3 text-purple-400" size={26} />
-              <span className="text-[10px] opacity-60 mb-1 uppercase tracking-widest font-semibold">XOR Level</span>
-              <span className="font-mono text-xl font-bold text-[var(--text-headline)]">{result?.xor_level}</span>
-            </div>
+            <SpeedometerGauge 
+              label="XOR Level" 
+              value={Array.isArray(result) ? result[0]?.xor_level : result?.xor_level} 
+              min={0} max={10} 
+              ticks={[0, 2, 4, 6, 8, 10]} 
+            />
 
-            <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-[var(--bg-app)] border border-[var(--border-medium)] hover:border-orange-500/50 hover:bg-orange-500/5 transition-all shadow-sm hover:shadow-orange-500/10 hover:-translate-y-1">
-              <Activity className="mb-3 text-orange-400" size={26} />
-              <span className="text-[10px] opacity-60 mb-1 uppercase tracking-widest font-semibold">Noise</span>
-              <span className="font-mono text-xl font-bold text-[var(--text-headline)]">{result?.noise}</span>
-            </div>
+            <SpeedometerGauge 
+              label="Noise" 
+              value={Array.isArray(result) ? result[0]?.noise : result?.noise} 
+              min={0} max={0.5} 
+              ticks={[0, 0.1, 0.2, 0.3, 0.4, 0.5]} 
+            />
 
-            <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-[var(--bg-app)] border border-[var(--border-medium)] hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all shadow-sm hover:shadow-emerald-500/10 hover:-translate-y-1">
-              <Database className="mb-3 text-emerald-400" size={26} />
-              <span className="text-[10px] opacity-60 mb-1 uppercase tracking-widest font-semibold">CRPs</span>
-              <span className="font-mono text-xl font-bold text-[var(--text-headline)]">{result?.num_samples}</span>
-            </div>
+            <SpeedometerGauge 
+              label="CRPs" 
+              value={Array.isArray(result) ? result[0]?.num_samples : result?.num_samples} 
+              min={0} max={10000} 
+              ticks={[0, 2500, 5000, 7500, 10000]} 
+            />
 
-            <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-[var(--bg-app)] border border-[var(--border-medium)] hover:border-rose-500/50 hover:bg-rose-500/5 transition-all shadow-sm hover:shadow-rose-500/10 hover:-translate-y-1">
-              <Cpu className="mb-3 text-rose-400" size={26} />
-              <span className="text-[10px] opacity-60 mb-1 uppercase tracking-widest font-semibold">Model</span>
-              <span className="font-mono text-xl font-bold text-[var(--text-headline)] uppercase">{result?.model_type}</span>
+            <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-[var(--bg-app)] border border-[var(--border-medium)] hover:border-[var(--border-strong)] transition-all shadow-sm h-[180px]">
+              <Cpu className="mb-4 text-[var(--text-muted)]" size={32} />
+              <span className="text-[11px] opacity-80 mb-2 uppercase tracking-widest font-bold text-[var(--text-headline)]">Model</span>
+              <span className="font-mono text-lg font-bold text-[var(--text-headline)] uppercase mt-2">{Array.isArray(result) ? '4 MODELS' : result?.model_type}</span>
             </div>
           </div>
         </div>
@@ -297,6 +504,8 @@ export default function Results({ result, history = [], currentSessionName, onSe
                     <option value="ALL">All Models</option>
                     <option value="lr">Log Reg</option>
                     <option value="mlp">MLP</option>
+                    <option value="svm">SVM</option>
+                    <option value="rf">Random Forest</option>
                   </select>
                 </div>
               </div>
@@ -416,8 +625,22 @@ export default function Results({ result, history = [], currentSessionName, onSe
                           <td className="py-3 font-mono text-xs">{run.config.model_type.toUpperCase()}</td>
                           <td className="py-3 font-mono text-xs">{run.config.xor_level}</td>
                           <td className="py-3 font-mono text-xs">{run.config.num_samples.toLocaleString()}</td>
-                          <td className="py-3 font-mono text-right font-bold" style={{ color: labelColor }}>
-                            {formatAccuracy(run.result.accuracy)}
+                          <td className="py-3 w-48">
+                            <div className="flex items-center justify-end gap-3">
+                              <div className="flex-1 bg-[var(--bg-app)] h-3 rounded-full overflow-hidden border border-white/10 relative shadow-inner">
+                                <div 
+                                  className="h-full rounded-full transition-all duration-1000 ease-out" 
+                                  style={{ 
+                                    width: `${run.result.accuracy * 100}%`, 
+                                    backgroundColor: labelColor, 
+                                    boxShadow: `0 0 8px ${labelColor}80` 
+                                  }} 
+                                />
+                              </div>
+                              <span className="font-mono text-right font-bold w-14 text-xs" style={{ color: labelColor }}>
+                                {formatAccuracy(run.result.accuracy)}
+                              </span>
+                            </div>
                           </td>
                         </tr>
                       );
