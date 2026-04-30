@@ -74,7 +74,12 @@ function AnimatedPipeline({ phase, config }: { phase: Phase, config: ExperimentC
                      phase === 'EVALUATING' ? 2 : 3;
 
   return (
-    <div className="flex flex-col items-center justify-center w-full py-12 relative overflow-hidden my-4 glass-panel rounded-xl">
+    <div className="flex flex-col items-center justify-center w-full py-16 relative overflow-hidden my-4 rounded-2xl transition-all duration-500"
+      style={{ background: 'var(--bg-panel-solid)', border: 'var(--border-medium)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
+      {/* Decorative Gradient Background */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at top, var(--accent-primary-alpha-8), transparent 70%), radial-gradient(ellipse at bottom, var(--accent-secondary-alpha-6), transparent 70%)' }} />
+      
       <div className="flex items-center justify-center w-full max-w-3xl relative z-10 px-4">
         {steps.map((step, idx) => {
           const isActive = phaseIndex === idx;
@@ -105,8 +110,8 @@ function AnimatedPipeline({ phase, config }: { phase: Phase, config: ExperimentC
                   {(isActive || isComplete) && (
                     <div className={cn(
                       "absolute inset-y-0 left-0 bg-gradient-to-r",
-                      isComplete ? "from-emerald-500/50 to-emerald-500/50 w-full" : "from-transparent via-[var(--accent-primary)] to-transparent w-[200%] animate-[slide_1s_linear_infinite]"
-                    )}></div>
+                      isComplete ? "from-[#34d39988] to-[#34d39988] w-full" : "from-transparent via-[var(--accent-primary)] to-transparent w-[200%] animate-[slide_1s_linear_infinite]"
+                    )} style={isActive ? { filter: 'drop-shadow(0 0 4px var(--accent-primary))' } : {}}></div>
                   )}
                 </div>
               )}
@@ -295,8 +300,13 @@ export default function Simulation({
   return (
     <div className="space-y-6 text-[var(--text-body)]">
 
-      <div className="text-center text-sm font-semibold opacity-70 tracking-widest uppercase">
-        {PHASE_LABELS[phase]}
+      <div className="text-center mb-8">
+        <span className="inline-block px-6 py-2 rounded-full text-sm font-bold tracking-widest uppercase"
+          style={{ background: 'var(--bg-panel-solid)', border: 'var(--border-medium)', color: 'var(--text-headline)', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-[var(--accent-primary)] to-[#8b5cf6]">
+            {PHASE_LABELS[phase]}
+          </span>
+        </span>
       </div>
 
       <div className="text-center">
@@ -310,8 +320,13 @@ export default function Simulation({
             <AnimatedPipeline phase={phase} config={config} />
             
             {(phase === 'TRAINING' || phase === 'EVALUATING' || phase === 'DONE') && (
-              <div className="glass-panel p-6 rounded-xl animate-in fade-in zoom-in duration-500 flex flex-col relative">
-                <div className="flex justify-between items-center mb-4">
+              <div className="p-6 rounded-2xl animate-in fade-in zoom-in duration-500 flex flex-col relative overflow-hidden"
+                style={{ background: 'var(--bg-panel-solid)', border: 'var(--border-medium)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
+                {/* Glow effects for chart */}
+                <div className="absolute -top-24 -right-24 w-64 h-64 bg-[var(--accent-primary)] opacity-10 blur-[80px] rounded-full pointer-events-none" />
+                <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-[#8b5cf6] opacity-10 blur-[80px] rounded-full pointer-events-none" />
+                
+                <div className="flex justify-between items-center mb-4 relative z-10">
                   <h3 className="text-sm font-bold text-[var(--text-headline)] flex items-center gap-2">
                     <Activity className={cn("w-4 h-4 text-[var(--accent-primary)]", phase !== 'DONE' && "animate-pulse")} />
                     {phase === 'DONE' ? 'Training Complete' : 'Live Training Progress'}
@@ -359,11 +374,19 @@ export default function Simulation({
         )}
       </div>
 
-      <div className="glass-panel p-4 text-xs font-mono h-40 overflow-y-auto rounded-xl border border-[var(--border-color)]">
-        {log.length === 0
-          ? <span className="text-[var(--text-muted)]">Awaiting experiment...</span>
-          : log.map((l, i) => <div key={i} className="text-[var(--text-body)] opacity-80 mb-1">{l}</div>)
-        }
+      <div className="relative rounded-2xl overflow-hidden mt-8" style={{ background: 'var(--bg-panel-solid)', border: 'var(--border-medium)', boxShadow: '0 8px 32px rgba(0,0,0,0.02)' }}>
+        <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-[var(--accent-primary)] via-[#8b5cf6] to-[var(--accent-secondary)] opacity-80" />
+        <div className="p-5 text-xs font-mono h-48 overflow-y-auto z-10 relative">
+          {log.length === 0
+            ? <div className="flex items-center justify-center h-full text-[var(--text-muted)] opacity-50 italic">Awaiting experiment initialization...</div>
+            : log.map((l, i) => (
+                <div key={i} className="text-[var(--text-body)] opacity-90 mb-1.5 leading-relaxed flex items-start gap-2">
+                  <span className="text-[var(--accent-primary)] mt-0.5">❯</span>
+                  <span>{l}</span>
+                </div>
+              ))
+          }
+        </div>
       </div>
 
     </div>

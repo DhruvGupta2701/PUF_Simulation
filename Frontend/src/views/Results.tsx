@@ -3,8 +3,10 @@ import { formatAccuracy, getSecurityLabel } from '../lib/utils';
 import { SimulationRun } from '../types';
 import ReportModal from '../components/ReportModal';
 import CompareModal from '../components/CompareModal';
-import { FileText, Layers, Activity, Database, Cpu, Zap, Search, Filter, Edit2, Check, X, CheckSquare, BarChart2, Trash2, Shield, ShieldAlert, ShieldCheck } from 'lucide-react';
+import SessionDetailsModal from '../components/SessionDetailsModal';
+import { FileText, Layers, Activity, Database, Cpu, Zap, Search, Filter, Edit2, Check, X, CheckSquare, BarChart2, Trash2, Shield, ShieldAlert, ShieldCheck, PieChart } from 'lucide-react';
 import { renameSession, deleteSession } from '../lib/api';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
 
 // A refined and professional SVG semi-circle solid gauge meter
 const GaugeMeter = ({ accuracy }: { accuracy: number }) => {
@@ -275,6 +277,7 @@ interface ResultsProps {
 
 export default function Results({ result, history = [], currentSessionName, onSelectSession, onHistoryChange }: ResultsProps) {
   const [showReportForSession, setShowReportForSession] = useState<string | null>(null);
+  const [showDetailsForSession, setShowDetailsForSession] = useState<string | null>(null);
   const [showCompareModal, setShowCompareModal] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -357,6 +360,12 @@ export default function Results({ result, history = [], currentSessionName, onSe
     return true;
   }).sort();
 
+  const overallTrendData = [...history].reverse().map((r, i) => ({
+    name: `Run ${i + 1}`,
+    accuracy: Number((r.result.accuracy * 100).toFixed(1)),
+    model: r.config.model_type.toUpperCase(),
+  }));
+
   return (
     <div className="space-y-6 text-[var(--text-headline)] animate-in fade-in">
       
@@ -373,6 +382,14 @@ export default function Results({ result, history = [], currentSessionName, onSe
             Object.entries(sessionGroups).filter(([sName]) => selectedForCompare[sName])
           )}
           onClose={() => setShowCompareModal(false)}
+        />
+      )}
+
+      {showDetailsForSession && sessionGroups[showDetailsForSession] && (
+        <SessionDetailsModal
+          sessionName={showDetailsForSession}
+          history={sessionGroups[showDetailsForSession]}
+          onClose={() => setShowDetailsForSession(null)}
         />
       )}
 
@@ -411,7 +428,7 @@ export default function Results({ result, history = [], currentSessionName, onSe
             Experiment Details
           </h3>
 
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 text-sm relative z-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-sm relative z-10">
             <SpeedometerGauge 
               label="Stages" 
               value={Array.isArray(result) ? result[0]?.n_stages : result?.n_stages} 
@@ -445,6 +462,34 @@ export default function Results({ result, history = [], currentSessionName, onSe
               <span className="text-[11px] opacity-80 mb-2 uppercase tracking-widest font-bold text-[var(--text-headline)]">Model</span>
               <span className="font-mono text-lg font-bold text-[var(--text-headline)] uppercase mt-2">{Array.isArray(result) ? '4 MODELS' : result?.model_type}</span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Overall Performance Trend */}
+      {history.length > 0 && (
+        <div className="rounded-xl p-6 relative overflow-hidden"
+          style={{ background: 'var(--bg-panel)', border: 'var(--border-medium)' }}
+        >
+          <h3 className="font-bold text-lg flex items-center gap-2 mb-6 text-[var(--text-headline)]">
+            <Activity className="text-cyan-400" size={20} />
+            Overall Performance Trend
+          </h3>
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={overallTrendData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
+                <XAxis dataKey="name" tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
+                <YAxis domain={[0, 100]} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} tickFormatter={(val) => `${val}%`} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'var(--bg-panel-solid)', borderRadius: '8px', border: '1px solid var(--border-medium)', color: 'var(--text-headline)' }} 
+                  itemStyle={{ color: 'var(--accent-primary)' }}
+                />
+                <Line type="monotone" dataKey="accuracy" name="Accuracy" stroke="var(--accent-primary)" strokeWidth={3} dot={{ r: 4, fill: 'var(--accent-primary)' }} activeDot={{ r: 6 }}>
+                  <LabelList dataKey="model" position="top" style={{ fill: 'var(--text-muted)', fontSize: '10px' }} offset={10} />
+                </Line>
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
       )}
@@ -535,7 +580,7 @@ export default function Results({ result, history = [], currentSessionName, onSe
                 border: currentSessionName === sName ? '2px solid var(--accent-primary)' : '1px solid var(--border-medium)' 
               }}
             >
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex flex-col xl:flex-row xl:justify-between items-start xl:items-center mb-6 gap-4">
                 <div>
                   {editingSession === sName ? (
                     <div className="flex items-center gap-2">
@@ -592,6 +637,14 @@ export default function Results({ result, history = [], currentSessionName, onSe
                     style={{ border: '1px solid var(--border-color)' }}
                   >
                     Add Run
+                  </button>
+                  <button
+                    onClick={() => setShowDetailsForSession(sName)}
+                    className="flex items-center gap-2 px-4 py-1.5 bg-white/5 hover:bg-white/10 text-[var(--text-headline)] text-sm font-semibold rounded-lg transition-all"
+                    style={{ border: '1px solid var(--border-color)' }}
+                  >
+                    <PieChart size={16} />
+                    Details
                   </button>
                   <button
                     onClick={() => setShowReportForSession(sName)}

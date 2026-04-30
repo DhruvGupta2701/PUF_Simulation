@@ -96,7 +96,7 @@ export default function Overview({ onStartNewSession, history = [] }: OverviewPr
       </div>
 
       {/* Concept cards */}
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {CARDS.map(({ icon, title, body, accent }) => (
           <div key={title} className="rounded-xl p-6 transition-all duration-200 hover:translate-y-[-2px]"
             style={{ background: 'var(--bg-panel)', border: 'var(--border-medium)' }}>
@@ -113,7 +113,8 @@ export default function Overview({ onStartNewSession, history = [] }: OverviewPr
           <h3 className="font-headline text-sm font-semibold" style={{ color: 'var(--text-headline)' }}>Expected Attack Accuracy by XOR Level</h3>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>10k CRPs, 64-stage PUF, no noise</p>
         </div>
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
           <thead>
             <tr style={{ background: 'var(--bg-header-light)' }}>
               {['Architecture', 'Logistic Regression', 'MLP', 'SVM', 'Random Forest', 'Risk Level'].map(h => (
@@ -124,13 +125,13 @@ export default function Overview({ onStartNewSession, history = [] }: OverviewPr
           <tbody>
             {METRICS.map(({ label, lr, mlp, svm, rf, risk }, i) => (
               <tr key={label} style={{ background: i % 2 === 0 ? 'var(--bg-panel-light)' : 'transparent', borderTop: 'var(--border-light)' }}>
-                <td className="px-6 py-3 font-mono text-xs" style={{ color: 'var(--text-headline)' }}>{label}</td>
+                <td className="px-6 py-3 font-mono text-xs whitespace-nowrap" style={{ color: 'var(--text-headline)' }}>{label}</td>
                 <td className="px-6 py-3 text-xs" style={{ color: 'var(--accent-primary)' }}>{lr}</td>
                 <td className="px-6 py-3 text-xs" style={{ color: 'var(--accent-secondary)' }}>{mlp}</td>
                 <td className="px-6 py-3 text-xs" style={{ color: '#ec4899' }}>{svm}</td>
                 <td className="px-6 py-3 text-xs" style={{ color: '#f59e0b' }}>{rf}</td>
                 <td className="px-6 py-3">
-                  <span className="text-xs font-mono px-2 py-0.5 rounded"
+                  <span className="text-xs font-mono px-2 py-0.5 rounded whitespace-nowrap"
                     style={{
                       background: risk === 'Critical' ? '#f8717120' : risk === 'High' ? '#fb923c20' : risk === 'Moderate' ? '#fbbf2420' : '#34d39920',
                       color: risk === 'Critical' ? '#f87171' : risk === 'High' ? '#fb923c' : risk === 'Moderate' ? '#fbbf24' : '#34d399',
@@ -142,10 +143,11 @@ export default function Overview({ onStartNewSession, history = [] }: OverviewPr
             ))}
           </tbody>
         </table>
+        </div>
       </div>
       
       {/* Dynamic Results Visualizations */}
-      <div className="grid grid-cols-2 gap-5 mt-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-8">
         
         {/* Basic Parameters Radar Chart */}
         <div className="rounded-xl overflow-hidden self-start flex flex-col h-full" style={{ border: 'var(--border-medium)', background: 'var(--bg-panel-solid)' }}>

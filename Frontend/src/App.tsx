@@ -9,9 +9,15 @@ import Overview from './views/Overview';
 import Results from './views/Results';
 import Simulation from './views/Simulation';
 import Login from './views/Login';
+import GoogleLoginPopup from './views/GoogleLoginPopup';
 import { getUserHistory } from './lib/api';
 
 export default function App() {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('googleLogin')) {
+    return <GoogleLoginPopup />;
+  }
+
   const { theme, setTheme } = useTheme();
   const [username, setUsername] = useState<string | null>(localStorage.getItem('puf_username') || null);
   const [currentView, setCurrentView] = useState<ViewType | 'LOGIN'>(username ? 'OVERVIEW' : 'LOGIN');

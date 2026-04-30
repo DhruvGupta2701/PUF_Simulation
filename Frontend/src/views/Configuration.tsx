@@ -38,9 +38,9 @@ function Slider({ label, description, value, min, max, step, format, onChange, a
         <input
           type="range" min={min} max={max} step={step} value={value}
           onChange={e => onChange(Number(e.target.value))}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          className="absolute top-1/2 -translate-y-1/2 w-[calc(100%+16px)] h-4 -left-2 opacity-0 z-10 appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:cursor-grab active:[&::-webkit-slider-thumb]:cursor-grabbing [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:cursor-grab active:[&::-moz-range-thumb]:cursor-grabbing"
         />
-        <div className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 shadow-lg transition-all"
+        <div className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 shadow-lg transition-all pointer-events-none"
           style={{ left: `calc(${pct}% - 8px)`, background: 'var(--bg-main)', borderColor: accent, boxShadow: `0 0 8px ${accent}66` }} />
       </div>
       <div className="flex justify-between text-[10px] font-mono" style={{ color: 'var(--text-muted)', opacity: 0.5 }}>
@@ -67,13 +67,14 @@ export default function Configuration({ config, setConfig, onViewChange }: Confi
       {/* Presets */}
       <div className="rounded-xl p-6" style={{ background: 'var(--bg-panel)', border: 'var(--border-medium)' }}>
         <h3 className="font-headline text-sm font-semibold mb-4" style={{ color: 'var(--text-headline)' }}>Quick Presets</h3>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {PRESETS.map(p => (
             <button key={p.label} onClick={() => setConfig(p.config)}
-              className={cn('px-4 py-3 rounded-lg text-left transition-all duration-200 hover:scale-[1.02]',
+              className={cn('px-4 py-3 rounded-lg text-left transition-all duration-200 hover:scale-[1.02] cursor-pointer',
                 JSON.stringify(config) === JSON.stringify(p.config)
-                  ? 'border-[#4cd6ff]' : 'border-white/10 hover:border-white/20')}
-              style={{ background: 'var(--bg-header-light)', border: `1px solid ${JSON.stringify(config) === JSON.stringify(p.config) ? '#4cd6ff40' : 'var(--border-color-strong)'}` }}>
+                  ? 'bg-[var(--accent-primary-alpha-8)] border-[rgba(76,214,255,0.4)]' 
+                  : 'bg-[var(--bg-header-light)] border-[var(--border-color-strong)] hover:bg-white/10 hover:border-[rgba(255,255,255,0.2)]')}
+              style={{ borderWidth: '1px', borderStyle: 'solid' }}>
               <div className="text-xs font-semibold" style={{ color: 'var(--text-headline)' }}>{p.label}</div>
               <div className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{p.desc}</div>
             </button>
@@ -81,7 +82,7 @@ export default function Configuration({ config, setConfig, onViewChange }: Confi
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* PUF Architecture */}
         <div className="rounded-xl p-6 space-y-6" style={{ background: 'var(--bg-panel)', border: 'var(--border-medium)' }}>
@@ -116,11 +117,14 @@ export default function Configuration({ config, setConfig, onViewChange }: Confi
                 ['all', 'Compare All Models', 'Runs all four models sequentially and creates a comparison chart.']
               ] as const).map(([val, name, desc]) => (
                 <button key={val} onClick={() => set('model_type')(val)}
-                  className={cn("p-3 rounded-lg text-left transition-all duration-200", val === 'all' ? "col-span-2" : "")}
-                  style={{
-                    background: config.model_type === val ? 'var(--accent-primary-alpha-8)' : 'var(--bg-header-light)',
-                    border: `1px solid ${config.model_type === val ? 'rgba(76,214,255,0.4)' : 'var(--border-color-strong)'}`,
-                  }}>
+                  className={cn(
+                    "p-3 rounded-lg text-left transition-all duration-200 cursor-pointer hover:scale-[1.02]",
+                    val === 'all' && "col-span-2",
+                    config.model_type === val 
+                      ? "bg-[var(--accent-primary-alpha-8)] border-[rgba(76,214,255,0.4)]"
+                      : "bg-[var(--bg-header-light)] border-[var(--border-color-strong)] hover:bg-white/10 hover:border-[rgba(255,255,255,0.2)]"
+                  )}
+                  style={{ borderWidth: '1px', borderStyle: 'solid' }}>
                   <div className="text-xs font-semibold" style={{ color: config.model_type === val ? 'var(--accent-primary)' : 'var(--text-headline)' }}>{name}</div>
                   <div className="text-[10px] mt-0.5 leading-relaxed" style={{ color: 'var(--text-muted)' }}>{desc}</div>
                 </button>
@@ -131,9 +135,9 @@ export default function Configuration({ config, setConfig, onViewChange }: Confi
       </div>
 
       {/* Summary + proceed */}
-      <div className="rounded-xl p-6 flex items-center justify-between"
+      <div className="rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
         style={{ background: 'rgba(76,214,255,0.05)', border: '1px solid rgba(76,214,255,0.15)' }}>
-        <div className="flex gap-8">
+        <div className="flex flex-wrap gap-4 md:gap-8">
           {[
             ['Stages', config.n_stages],
             ['XOR k', config.xor_level],
@@ -149,7 +153,7 @@ export default function Configuration({ config, setConfig, onViewChange }: Confi
           ))}
         </div>
         <button onClick={() => onViewChange('SIMULATION')}
-          className="px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-[1.02]"
+          className="w-full md:w-auto px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-[1.02]"
           style={{ background: 'linear-gradient(135deg, #4cd6ff, #00a8cc)', color: 'var(--on-accent-primary)', boxShadow: '0 0 16px rgba(76,214,255,0.25)' }}>
           Run Attack →
         </button>

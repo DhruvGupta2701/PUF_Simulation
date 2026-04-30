@@ -53,18 +53,22 @@ export default function Sidebar({ currentView, onViewChange, backendOnline, user
       <nav className="flex-1 px-3">
         {NAV_ITEMS.map(({ view, label, icon, desc }) => {
           const active = currentView === view;
+          const isSimulate = view === 'SIMULATION';
           return (
             <button
               key={view}
               onClick={() => {
+                if (isSimulate) return;
                 onViewChange(view);
                 if (setIsOpen) setIsOpen(false);
               }}
+              disabled={isSimulate}
               className={cn(
                 'w-full flex items-center gap-3 px-3 py-3 rounded-lg mb-1 text-left transition-all duration-200 group',
                 active
                   ? 'text-[var(--accent-primary)]'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text-body)] hover:bg-[var(--bg-panel)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-body)] hover:bg-[var(--bg-panel)]',
+                isSimulate && 'cursor-not-allowed opacity-50 hover:bg-transparent hover:text-[var(--text-muted)] pointer-events-none'
               )}
               style={active ? { background: 'var(--accent-primary-alpha-15)' } : {}}
             >
