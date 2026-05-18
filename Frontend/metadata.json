@@ -1,0 +1,5 @@
+{
+  "name": "PUF Core v1.0",
+  "description": "Hardware security deck for Physically Unclonable Function (PUF) architecture configuration, simulation, and analysis.",
+  "requestFramePermissions": []
+}

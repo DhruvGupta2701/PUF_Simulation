@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUF ML Attack Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-content">
+            <h1>PUF ML Attack Simulation</h1>
+            <div class="theme-toggle">
+                <button id="theme-btn" class="btn btn-icon" data-tooltip="Toggle Theme">
+                    <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+        
+        <!-- Top Row -->
+        <div class="dashboard-row">
+            
+            <!-- Left Panel: PUF Configuration -->
+            <section class="panel puf-panel">
+                <div class="panel-header">
+                    <h2>PUF Environment</h2>
+                    <p class="subtitle">Physical device & dataset generation</p>
+                </div>
+
+                <div id="xor-warning" class="alert warning hidden">
+                    <strong>Warning:</strong> XOR level > 2. Linear models (like Logistic Regression) may struggle to predict accurately without complex feature engineering.
+                </div>
+
+                <!-- Delay Stages -->
+                <div class="control-group" data-tooltip="Determines the length of the challenge vector.">
+                    <div class="control-header">
+                        <div class="label-container"><label>Delay Stages (n)</label></div>
+                        <span class="value-display" id="delay-stages-val">64</span>
+                    </div>
+                    <div class="slider-container color-cyan">
+                        <input type="range" id="delay-stages" min="8" max="256" value="64" class="custom-slider">
+                        <div class="slider-labels"><span>8</span><span>256</span></div>
+                    </div>
+                </div>
+
+                <!-- XOR Level -->
+                <div class="control-group" data-tooltip="Number of Arbiter PUFs XORed together.">
+                    <div class="control-header">
+                        <div class="label-container"><label>XOR Level (k)</label></div>
+                        <span class="value-display" id="xor-level-val">2</span>
+                    </div>
+                    <div class="slider-container color-purple">
+                        <input type="range" id="xor-level" min="1" max="8" value="2" class="custom-slider">
+                        <div class="slider-labels"><span>1</span><span>8</span></div>
+                    </div>
+                </div>
+
+                <!-- Noise -->
+                <div class="control-group" data-tooltip="Standard deviation of thermal/environmental noise.">
+                    <div class="control-header">
+                        <div class="label-container"><label>Noise σ</label></div>
+                        <span class="value-display" id="noise-level-val">0.10</span>
+                    </div>
+                    <div class="slider-container color-green">
+                        <input type="range" id="noise-level" min="0" max="1" step="0.01" value="0.1" class="custom-slider">
+                        <div class="slider-labels"><span>0.00</span><span>1.00</span></div>
+                    </div>
+                </div>
+
+                <!-- CRP Count -->
+                <div class="control-group" data-tooltip="Total Challenge-Response Pairs for training/testing.">
+                    <div class="control-header">
+                        <div class="label-container"><label>CRP Count</label></div>
+                        <span class="value-display" id="crp-count-val">100,000</span>
+                    </div>
+                    <div class="slider-container color-cyan">
+                        <input type="range" id="crp-count" min="100" max="200000" step="100" value="100000" class="custom-slider">
+                        <div class="slider-labels"><span>100</span><span>200,000</span></div>
+                    </div>
+                </div>
+
+                <!-- Random Seed -->
+                <div class="control-group" data-tooltip="Seed for the random number generator to ensure experiment reproducibility.">
+                    <div class="control-header">
+                        <div class="label-container"><label>Random Seed</label></div>
+                        <span class="value-display" id="random-seed-val">42</span>
+                    </div>
+                    <div class="slider-container color-purple">
+                        <input type="range" id="random-seed" min="0" max="999" step="1" value="42" class="custom-slider">
+                        <div class="slider-labels"><span>0</span><span>999</span></div>
+                    </div>
+                </div>
+
+                <div class="actions-group">
+                    <button id="btn-run-selected" class="btn btn-primary">Run Selected Attack</button>
+                    <button id="btn-run-all" class="btn btn-secondary">Run & Compare All Models</button>
+                </div>
+            </section>
+
+            <!-- Right Panel: Model Configuration -->
+            <section class="panel model-panel">
+                <div class="panel-header">
+                    <h2>Attack Model</h2>
+                    <p class="subtitle">Machine learning classifier settings</p>
+                </div>
+
+                <!-- Model Tabs -->
+                <div class="tabs">
+                    <button class="tab-btn active" data-target="model-lr">Logistic Regression</button>
+                    <button class="tab-btn" data-target="model-svm">SVM</button>
+                    <button class="tab-btn" data-target="model-rf">Random Forest</button>
+                    <button class="tab-btn" data-target="model-mlp">Neural Network</button>
+                </div>
+
+                <!-- Configuration Mode Toggle -->
+                <div class="mode-toggle-container">
+                    <span>Recommended</span>
+                    <label class="switch">
+                        <input type="checkbox" id="config-mode-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                    <span>Custom</span>
+                </div>
+
+                <!-- Model Content Areas -->
+                <div class="tab-content-container">
+                    
+                    <!-- Logistic Regression -->
+                    <div id="model-lr" class="tab-content active" data-model-id="lr">
+                        <div class="form-group">
+                            <label>Solver</label>
+                            <select class="custom-select" name="solver" disabled>
+                                <option value="lbfgs" selected>lbfgs</option>
+                                <option value="saga">saga</option>
+                                <option value="liblinear">liblinear</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Iterations</label>
+                            <input type="number" class="custom-input" name="max_iter" value="2000" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Regularization (C)</label>
+                            <input type="number" class="custom-input" name="C" value="10.0" step="0.1" readonly>
+                        </div>
+                    </div>
+
+                    <!-- SVM -->
+                    <div id="model-svm" class="tab-content" data-model-id="svm">
+                        <div class="form-group">
+                            <label>Kernel</label>
+                            <select class="custom-select" name="kernel" disabled>
+                                <option value="rbf" selected>RBF</option>
+                                <option value="linear">Linear</option>
+                                <option value="poly">Polynomial</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Regularization (C)</label>
+                            <input type="number" class="custom-input" name="C" value="10.0" step="0.1" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Gamma</label>
+                            <select class="custom-select" name="gamma" disabled>
+                                <option value="scale" selected>scale</option>
+                                <option value="auto">auto</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Random Forest -->
+                    <div id="model-rf" class="tab-content" data-model-id="rf">
+                        <div class="form-group">
+                            <label>Estimators (Trees)</label>
+                            <input type="number" class="custom-input" name="n_estimators" value="200" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Depth</label>
+                            <input type="number" class="custom-input" name="max_depth" value="None" placeholder="None" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Min Samples Split</label>
+                            <input type="number" class="custom-input" name="min_samples_split" value="2" readonly>
+                        </div>
+                    </div>
+
+                    <!-- Neural Network (MLP) -->
+                    <div id="model-mlp" class="tab-content" data-model-id="mlp">
+                        <div class="form-group">
+                            <label>Hidden Layers</label>
+                            <input type="text" class="custom-input" name="hidden_layer_sizes" value="(128, 64)" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Activation</label>
+                            <select class="custom-select" name="activation" disabled>
+                                <option value="relu" selected>ReLU</option>
+                                <option value="tanh">Tanh</option>
+                                <option value="logistic">Logistic</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Learning Rate (init)</label>
+                            <input type="number" class="custom-input" name="learning_rate_init" value="0.001" step="0.001" readonly>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+        </div>
+
+        <!-- Bottom Row: Results -->
+        <div class="dashboard-row">
+            <section class="panel results-panel">
+                <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h2>Execution Results</h2>
+                        <p class="subtitle">Accuracy and performance metrics</p>
+                    </div>
+                    <div class="results-actions">
+                        <button id="btn-export-csv" class="btn btn-outline btn-sm">Export CSV</button>
+                        <button id="btn-export-json" class="btn btn-outline btn-sm">Export JSON</button>
+                    </div>
+                </div>
+
+                <div class="results-content">
+                    <div class="chart-container">
+                        <!-- Loading Overlay -->
+                        <div id="chart-loading" class="loading-overlay hidden">
+                            <div class="spinner"></div>
+                            <p id="loading-text">Simulating attacks...</p>
+                        </div>
+                        <div id="gauges-wrapper" class="gauges-wrapper"></div>
+                    </div>
+                    <div class="metrics-container" id="metrics-container">
+                        <!-- Populated dynamically by JS -->
+                        <div class="empty-state">Run an attack to see detailed metrics.</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Tooltip Element -->
+    <div id="custom-tooltip" class="tooltip"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
